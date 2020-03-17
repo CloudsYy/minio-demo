@@ -1,12 +1,12 @@
 package com.example.miniodemo.Controller;
 
 import io.minio.MinioClient;
-import io.minio.messages.Bucket;
+import io.minio.ObjectStat;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
-import java.util.List;
 
 @RestController
 @RequestMapping("/minio")
@@ -31,6 +31,7 @@ public class MinioController {
             System.out.println("is = " + is);
             System.out.println("filename = " + filename);
             System.out.println("contentType = " + contentType);
+
             return "上传成功！";
         }
         catch (Exception ex) {
@@ -46,24 +47,32 @@ public class MinioController {
     * 即使其所在的存储桶是私有的。这个presigned URL可以设置一个失效时间，默认值是7天。
     * */
     @GetMapping("download")
-    public String downloadFiles(@RequestParam("filename") String filename){
+    public String downloadFiles(@RequestParam("filename") String filename, HttpServletRequest request, HttpServletResponse httpResponse){
         try {
             MinioClient minioClient = new MinioClient(url,accessKey,secretKey);
+            ObjectStat statObject = minioClient.statObject("files", filename);
+//            long length = statObject.length();
+//            String name = statObject.bucketName();
 //            List<Bucket> buckets = minioClient.listBuckets();
 //            for (Bucket bucket : buckets) {
 //                System.out.println(bucket);
 //            }
-//      minioClient.makeBucket("bucket01","beijing",true); 生成桶
-//            minioClient.removeBucket("bucket01");
-            String urlD = minioClient.presignedGetObject("files",filename);
-            System.out.println("urlD = " + urlD);
-
-            //返回下载链接
-            return urlD;
+//          minioClient.makeBucket("bucket01","beijing",true); 生成桶
+//          minioClient.removeBucket("bucket01");
+            boolean files = minioClient.bucketExists("files");
+            if (files) {
+                System.out.println("文件存在！");
+                String urlD = minioClient.presignedGetObject("files",filename);
+                System.out.println("urlD = " + urlD);
+                httpResponse.sendRedirect(urlD);
+                return "下载成功！";
+            } else {
+                return "文件不存在！";
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
-            return "获取失败";
         }
+        return "下载失败！";
     }
 
 }
