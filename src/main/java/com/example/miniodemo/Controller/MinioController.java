@@ -59,6 +59,9 @@ public class MinioController {
             byte buf[] = new byte[1024];
             int length = 0;
             httpResponse.reset();
+            //Content-disposition 是 MIME 协议的扩展，MIME 协议指示 MIME 用户代理如何显示附加的文件。
+            // Content-disposition其实可以控制用户请求所得的内容存为一个文件的时候提供一个默认的文件名，
+            // 文件直接在浏览器上显示或者在访问时弹出文件下载对话框。
             httpResponse.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
             httpResponse.setContentType("application/x-msdownload");
             httpResponse.setCharacterEncoding("utf-8");
